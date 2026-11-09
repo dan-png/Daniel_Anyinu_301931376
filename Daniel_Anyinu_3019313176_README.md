@@ -6,7 +6,7 @@ Student ID: 301931376
 
 ## Case study
 
-To be selected in the next step.
+Super Mart is a retail system
 
 ## Portfolio folders
 
