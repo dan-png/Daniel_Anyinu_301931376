@@ -19,7 +19,7 @@ customers
 
 ```customer_id: SERIAL, PK, required.```
 
-```full_name: VARCHAR(100), required.``
+```full_name: VARCHAR(100), required.```
 
 ```phone_number: VARCHAR(20), UNIQUE, required.```
 
