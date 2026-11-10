@@ -15,7 +15,7 @@ order_items: Individual product lines belonging to a specific order.
 ## 2. Attributes and keys
 A Primary Key (PK) uniquely identifies each row in a table. A Foreign Key (FK) links a row to a primary key in another table to keep references valid.
 
-customers
+### Customers
 
 ```customer_id: SERIAL, PK, required.```
 
@@ -27,13 +27,13 @@ customers
 
 ```registered_at: TIMESTAMP, required (defaults to current time).```
 
-categories
+### Categories
 
 ```category_id: SERIAL, PK, required.```
 
 ```category_name: VARCHAR(80), UNIQUE, required.```
 
-products
+### Products
 
 ```product_id: SERIAL, PK, required.```
 
@@ -47,7 +47,7 @@ products
 
 ```stock_quantity: INTEGER, required.```
 
-orders
+### Orders
 
 ```order_id: SERIAL, PK, required.```
 
@@ -91,7 +91,7 @@ Valid line items: Enforced by `NOT NULL foreign keys order_id and product_id on 
 
 No duplicate product rows per order: Enforced by a composite Unique Constraint UNIQUE (order_id, product_id) on order_items, which stops the same product from being inserted twice into one order.
 
-Prevent overselling: Foreign keys cannot compare values across two tables. A checkout transaction or database trigger (an automatic rule run before insert/update) checks that order_items.quantity <= products.stock_quantity and deducts the stock, while CHECK (stock_quantity >= 0) blocks negative stock.
+Prevent overselling: Foreign keys cannot compare values across two tables. A checkout transaction or database trigger (an automatic rule run before insert/update) checks that `order_items.quantity <= products.stock_quantity and deducts the stock`, while `CHECK (stock_quantity >= 0)` blocks negative stock.
 
 Locked completed/cancelled orders and single stock return: `CHECK (order_status IN ('OPEN', 'COMPLETED', 'CANCELLED'))` restricts status values. A database trigger blocks changes to order_items when orders.order_status is 'COMPLETED' or 'CANCELLED' and prevents a 'CANCELLED' order from being cancelled a second time.
 
