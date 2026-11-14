@@ -159,3 +159,22 @@ ORDER BY product_id;
 | :--- | :--- | :--- | :--- |
 | 1 | SM-MILK-400G | Peak Milk 400g | 37 |
 | 2 | SM-RICE-5KG | Mama Gold Rice 5kg | 15 |
+
+# Portfolio 3 Transactions and Concurrency
+
+## Commit and rollback
+In `super_mart_portfolio`[cite: 2, 3, 4], the first transaction used `BEGIN` and `COMMIT` to complete Chidi Okafor's open order (`order_id = 2`, `closed_at = '2026-10-02 14:40:00'`) and deduct 3 ordered units of `SM-MILK-400G`, reducing its `stock_quantity` from `40` to `37`. A guard condition (`WHERE order_status = 'OPEN'`) prevented repeating the checkout (`UPDATE 0`). A second transaction increased `SM-RICE-5KG` stock from `15` to `25`, then attempted to subtract `50` units from `SM-MILK-400G`, triggering `products_stock_quantity_check` (`CHECK (stock_quantity >= 0)`). Issuing `ROLLBACK` cleared the aborted state and undid the restock on `SM-RICE-5KG` (`stock_quantity` remained `15`) while preserving the earlier committed changes on Order 2 and `SM-MILK-400G`.
+
+## Isolation and concurrency control
+Two independent PostgreSQL sessions running under `READ COMMITTED` isolation tested concurrent item additions to a new open order (`order_id = 4`) containing `SM-DIAP-XL`. After Session A inserted `SM-RICE-5KG` (`quantity = 1`) without committing, Session B's `SELECT` query saw only the committed `SM-DIAP-XL` row, preventing a dirty read. When Session B attempted to insert `SM-RICE-5KG` into the same order, PostgreSQL forced Session B to wait on the index lock for the composite unique constraint `order_items_order_id_product_id_key` (`UNIQUE (order_id, product_id)`). Once Session A ran `COMMIT`, Session B immediately failed with a duplicate key violation and ran `ROLLBACK`, leaving a single `SM-RICE-5KG` row on the order.
+
+## Conclusion
+PostgreSQL transactions, `CHECK` constraints, and unique index locks together protect Super Mart inventory and order integrity during failures and concurrent checkouts. While `READ COMMITTED` hides uncommitted changes, isolation alone does not prevent all conflicting operations without explicit table constraints, `WHERE` status guards, or row-level locks (`SELECT ... FOR UPDATE`) when multiple sessions deduct stock concurrently.
+
+## Files
+
+| File | Contents |
+| :--- | :--- |
+| [`Daniel_Anyinu_3019313176_P3_Transactions.sql`](Daniel_Anyinu_3019313176_P3_Transactions.sql) | Single-session `BEGIN`, `COMMIT`, repeat-guard check, constraint violation, and `ROLLBACK` SQL statements. |
+| [`Daniel_Anyinu_3019313176_P3_Concurrency.sql`](Daniel_Anyinu_3019313176_P3_Concurrency.sql) | Two-session (`Session A` and `Session B`) `READ COMMITTED` isolation and unique constraint locking test. |
+| [`screenshots/`](screenshots/) | Terminal screenshots showing the commit/rollback verification, Session B waiting state, and final concurrency outcome. |
